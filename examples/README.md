@@ -27,4 +27,4 @@ cargo run --example error_handling
 | 04 | [Error Handling](04_error_handling.rs) | All error paths, user-facing error mapping | Yes |
 | 05 | [OTP Production](05_otp_production.rs) | Production OTP: rate limiting, expiry, DB schemas (PostgreSQL, MySQL, SQLite, Redis) | Yes |
 
-All examples use `KWTSMS_TEST_MODE=1` by default (no real messages sent, no credits consumed).
+All examples use `KWTSMS_TEST_MODE=1` by default (queued, not delivered; credits held until you delete them from the Sending Queue).

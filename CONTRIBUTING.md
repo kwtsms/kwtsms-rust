@@ -46,7 +46,7 @@ export rust_password=rust_password
 cargo test --features integration
 ```
 
-Integration tests always use `test_mode=true`. No credits are consumed.
+Integration tests always use `test_mode=true`. Test messages are queued but not delivered. Their credits are held until you delete them from the Sending Queue in your kwtsms.com account.
 
 ## Build
 
@@ -123,7 +123,7 @@ Types: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`
 Examples:
 ```
 feat: add status() method for message queue lookup
-fix: handle ERR028 (15s same-number cooldown) in bulk send
+fix: handle ERR028 (duplicate SMS protection) in bulk send
 test: cover Arabic digit normalization edge cases
 chore: bump dependency versions
 ```

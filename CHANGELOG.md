@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- `send_with_retry()` waits 10 seconds (the default Duplicate SMS window) between ERR028 retries instead of a hardcoded 16. New `send_with_retry_wait()` takes the wait explicitly.
+- ERR028 action text: "Sent to the same number too soon." ERR028 is opt-in per account (Duplicate SMS protection) with a per-account window, not a fixed 15 seconds.
+
+### Docs
+
+- Test mode: test messages are queued but not delivered, and their credits are held until you delete them from the Sending Queue. Earlier text said no credits were consumed.
+
 ## [0.1.10] - 2026-03-15
 
 ### Fixed

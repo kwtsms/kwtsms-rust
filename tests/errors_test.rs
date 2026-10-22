@@ -101,7 +101,8 @@ fn test_enrich_err028() {
         "description": "Rate limit"
     });
     enrich_error(&mut data);
-    assert!(data["action"].as_str().unwrap().contains("15 seconds"));
+    // 2026-10-22 15:34 +03: the action no longer names a fixed 15 s window.
+    assert!(data["action"].as_str().unwrap().contains("too soon"));
 }
 
 #[test]

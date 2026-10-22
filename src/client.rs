@@ -44,7 +44,8 @@ impl KwtSms {
     /// - `username`: API username (not your account phone number)
     /// - `password`: API password
     /// - `sender_id`: Sender ID (default: "KWT-SMS"). Case sensitive.
-    /// - `test_mode`: If true, messages are queued but not delivered, no credits consumed.
+    /// - `test_mode`: If true, messages are queued but not delivered; their credits are held
+    ///   until you delete them from the Sending Queue (2026-10-22 15:34 +03: corrected, test sends are not free).
     /// - `log_file`: Path to JSONL log file (None or empty string disables logging).
     pub fn new(
         username: &str,
@@ -488,19 +489,46 @@ impl KwtSms {
         last_result
     }
 
-    /// Send with auto-retry on ERR028 (15-second rate limit).
+    /// Send, resending on ERR028 up to `max_retries` times (0 = no retry),
+    /// waiting 10 seconds (the default Duplicate SMS window) between attempts.
     ///
-    /// Retries up to `max_retries` times with 16-second delay.
+    /// ERR028 only happens when Duplicate SMS protection is on for the account:
+    /// a number in the request was sent the same message within the account's
+    /// window, so the whole request was rejected and nothing was charged. The
+    /// window is set per account; use [`send_with_retry_wait`](Self::send_with_retry_wait)
+    /// if yours is not 10 seconds.
     /// Only retries ERR028. All other errors return immediately.
     ///
     /// **Note:** This method blocks the calling thread with `thread::sleep`.
     /// If used from an async runtime, wrap in `tokio::task::spawn_blocking`.
+    // 2026-10-22 15:34 +03: wait is no longer a hardcoded 16 s; ERR028 is opt-in per account
+    // with a per-account window (10 s default). Delegates to send_with_retry_wait.
     pub fn send_with_retry(
         &self,
         mobile: &[&str],
         message: &str,
         sender: Option<&str>,
         max_retries: u32,
+    ) -> Result<Value, KwtSmsError> {
+        self.send_with_retry_wait(
+            mobile,
+            message,
+            sender,
+            max_retries,
+            Duration::from_secs(10),
+        )
+    }
+
+    /// Same as [`send_with_retry`](Self::send_with_retry), with the wait between
+    /// ERR028 retries given explicitly (set it to your account's Duplicate SMS window).
+    // 2026-10-22 15:34 +03: added so the ERR028 wait matches the account's own window.
+    pub fn send_with_retry_wait(
+        &self,
+        mobile: &[&str],
+        message: &str,
+        sender: Option<&str>,
+        max_retries: u32,
+        wait: Duration,
     ) -> Result<Value, KwtSmsError> {
         let mut result = self.send(mobile, message, sender)?;
 
@@ -509,7 +537,7 @@ impl KwtSms {
             if code != "ERR028" {
                 return Ok(result);
             }
-            thread::sleep(Duration::from_secs(16));
+            thread::sleep(wait);
             result = self.send(mobile, message, sender)?;
         }
 

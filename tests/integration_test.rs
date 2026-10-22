@@ -7,7 +7,8 @@
 //! - rust_username: API username
 //! - rust_password: API password
 //!
-//! All tests use test_mode=true (no credits consumed, no messages delivered).
+//! All tests use test_mode=true (no messages delivered; their credits are held until you
+//! delete them from the Sending Queue). 2026-10-22 15:34 +03: corrected, test sends are not free.
 
 #![cfg(feature = "integration")]
 

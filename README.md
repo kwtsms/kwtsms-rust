@@ -175,9 +175,13 @@ let result = sms.dlr("msg-id-from-send-response").unwrap();
 ### Send with ERR028 Retry
 
 ```rust
-// Auto-retries up to 3 times with 16s delay on ERR028 (same-number rate limit)
+// Resends on ERR028 up to 3 times (0 = no retry), waiting 10s between attempts
 let result = sms.send_with_retry(&["96598765432"], "Hello!", None, 3).unwrap();
+// Or match your account's own window:
+let result = sms.send_with_retry_wait(&["96598765432"], "Hello!", None, 3, std::time::Duration::from_secs(30)).unwrap();
 ```
+
+ERR028 only happens when Duplicate SMS protection is turned on in your account's API settings. When it is on and any number in the request was sent the same message within the account's window (10 seconds by default, configurable per account), the whole request is rejected and nothing is charged.
 
 ## Utility Functions
 
@@ -261,7 +265,7 @@ All formats are accepted and normalized automatically:
 
 ## Test Mode
 
-**Test mode** (`KWTSMS_TEST_MODE=1`) sends your message to the kwtSMS queue but does NOT deliver it to the handset. No SMS credits are consumed. Use this during development.
+**Test mode** (`KWTSMS_TEST_MODE=1`) sends your message to the kwtSMS queue but does NOT deliver it to the handset. Its credits are held until you delete it from the Sending Queue in your kwtsms.com account. Use this during development.
 
 **Live mode** (`KWTSMS_TEST_MODE=0`) delivers the message for real and deducts credits. Always develop in test mode and switch to live only when ready for production.
 
@@ -359,7 +363,7 @@ Run an example: `cargo run --example basic_usage`
 # Unit + mock tests (no credentials needed)
 cargo test
 
-# Integration tests (real API, test mode, no credits consumed)
+# Integration tests (real API, test mode: not delivered; delete the queued test messages from the Sending Queue to release their held credits)
 export rust_username=rust_username
 export rust_password=rust_password
 cargo test --features integration
@@ -373,7 +377,7 @@ Check the **Sending Queue** at [kwtsms.com](https://www.kwtsms.com/login/). If y
 
 **2. What is the difference between Test mode and Live mode?**
 
-**Test mode** (`KWTSMS_TEST_MODE=1`) sends your message to the kwtSMS queue but does NOT deliver it to the handset. No SMS credits are consumed. Use this during development. **Live mode** (`KWTSMS_TEST_MODE=0`) delivers the message for real and deducts credits. Always develop in test mode and switch to live only when ready for production.
+**Test mode** (`KWTSMS_TEST_MODE=1`) sends your message to the kwtSMS queue but does NOT deliver it to the handset. Its credits are held until you delete it from the Sending Queue in your kwtsms.com account. Use this during development. **Live mode** (`KWTSMS_TEST_MODE=0`) delivers the message for real and deducts credits. Always develop in test mode and switch to live only when ready for production.
 
 **3. What is a Sender ID and why should I not use "KWT-SMS" in production?**
 
