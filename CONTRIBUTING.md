@@ -17,7 +17,7 @@ Contributions are welcome: bug reports, fixes, new examples, and documentation i
 ### Clone and verify
 
 ```bash
-git clone https://github.com/boxlinknet/kwtsms-rust.git
+git clone https://github.com/kwtsms/kwtsms-rust.git
 cd kwtsms-rust
 cargo build
 cargo test
@@ -177,7 +177,7 @@ Include:
 
 ## Security Issues
 
-Do not open public issues for security vulnerabilities. Use [GitHub's private security advisory](https://github.com/boxlinknet/kwtsms-rust/security/advisories/new) or contact support directly.
+Do not open public issues for security vulnerabilities. Use [GitHub's private security advisory](https://github.com/kwtsms/kwtsms-rust/security/advisories/new) or contact support directly.
 
 ## License
 

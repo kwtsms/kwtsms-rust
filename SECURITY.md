@@ -6,7 +6,7 @@ Do **not** open a public issue for security vulnerabilities.
 
 Instead, use one of these methods:
 
-1. **GitHub Security Advisory** (preferred): [Create a private advisory](https://github.com/boxlinknet/kwtsms-rust/security/advisories/new)
+1. **GitHub Security Advisory** (preferred): [Create a private advisory](https://github.com/kwtsms/kwtsms-rust/security/advisories/new)
 2. **Direct contact**: Reach out via [kwtSMS support](https://www.kwtsms.com/support.html)
 
 Include:
