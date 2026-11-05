@@ -112,7 +112,7 @@ mod tests {
         let request = serde_json::json!({
             "username": "rust_username",
             "password": "rust_password",
-            // 2026-11-05 08:37 +03: pass-through field, placeholder, int-testnumber
+            // 2026-11-05 08:35 +03: pass-through field, placeholder, int-testnumber
             "mobile": "965XXXXXXXX"
         });
         let response = serde_json::json!({"result": "OK"});

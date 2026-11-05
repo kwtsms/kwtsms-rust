@@ -27,7 +27,7 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
       - run: cargo build --verbose
-      # 2026-11-05 08:55 +03: tests read the phone number from this secret and return early when unset (int-testnumber)
+      # 2026-11-05 08:35 +03: tests read the phone number from this secret and return early when unset (int-testnumber)
       - run: cargo test --verbose
         env:
           KWTSMS_TEST_NUMBER: ${{ secrets.KWTSMS_TEST_NUMBER }}

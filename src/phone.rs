@@ -723,7 +723,7 @@ pub fn validate_phone_input(phone: &str) -> (bool, Option<String>, String) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    // 2026-11-05 08:45 +03: Kuwait tests read KWTSMS_TEST_NUMBER through the shared helper
+    // 2026-11-05 08:35 +03: Kuwait tests read KWTSMS_TEST_NUMBER through the shared helper
     // and return early when it is unset; no phone number in the repo. int-testnumber
     use crate::test_common::*;
 

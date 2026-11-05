@@ -30,7 +30,7 @@ pub mod phone;
 mod request;
 pub mod types;
 
-// 2026-11-05 08:37 +03: shared test number helper (KWTSMS_TEST_NUMBER) for the inline
+// 2026-11-05 08:35 +03: shared test number helper (KWTSMS_TEST_NUMBER) for the inline
 // unit tests; the same file serves tests/*.rs as `mod common;`. Doc example above uses
 // the placeholder 965XXXXXXXX (no_run, never executed). int-testnumber
 #[cfg(test)]

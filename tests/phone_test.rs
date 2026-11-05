@@ -1,4 +1,4 @@
-// 2026-11-05 08:45 +03: Kuwait tests read KWTSMS_TEST_NUMBER through tests/common and
+// 2026-11-05 08:35 +03: Kuwait tests read KWTSMS_TEST_NUMBER through tests/common and
 // return early when it is unset; no phone number in the repo. int-testnumber
 mod common;
 use common::*;
@@ -297,7 +297,7 @@ fn test_format_belgium_no_prefix_check() {
 
 #[test]
 fn test_format_india_valid() {
-    // 2026-11-05 09:02 +03: sequential sample, the old one embedded the removed Kuwait digits, int-testnumber
+    // 2026-11-05 08:35 +03: sequential sample, the old one embedded the removed Kuwait digits, int-testnumber
     let (valid, _) = validate_phone_format("919123456789");
     assert!(valid);
 }

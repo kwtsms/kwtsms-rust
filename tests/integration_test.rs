@@ -12,7 +12,7 @@
 
 #![cfg(feature = "integration")]
 
-// 2026-11-05 08:50 +03: live sends go only to KWTSMS_TEST_NUMBER (tests/common), each test
+// 2026-11-05 08:35 +03: live sends go only to KWTSMS_TEST_NUMBER (tests/common), each test
 // returns early when it is unset; no phone number in the repo. int-testnumber
 mod common;
 
