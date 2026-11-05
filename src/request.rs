@@ -21,7 +21,13 @@ const _: () = assert!(
 /// - 15-second timeout
 /// - Enriches ERROR responses with action guidance
 /// - Logs every call to JSONL if log_file is not empty
-pub fn api_request(endpoint: &str, payload: &Value, log_file: &str) -> Result<Value, KwtSmsError> {
+/// - Sends `user_agent` as the User-Agent (2026-11-05 14:13 +03: added, #939)
+pub fn api_request(
+    endpoint: &str,
+    payload: &Value,
+    log_file: &str,
+    user_agent: &str,
+) -> Result<Value, KwtSmsError> {
     let url = format!("{}/{}/", BASE_URL, endpoint);
 
     let body = match serde_json::to_string(payload) {
@@ -32,6 +38,8 @@ pub fn api_request(endpoint: &str, payload: &Value, log_file: &str) -> Result<Va
     let result = ureq::post(&url)
         .set("Content-Type", "application/json")
         .set("Accept", "application/json")
+        // 2026-11-05 14:13 +03: "kwtsms-rust/<version>", prefixed by the app token when given (#939).
+        .set("User-Agent", user_agent)
         .timeout(std::time::Duration::from_secs(TIMEOUT_SECS))
         .send_string(&body);
 

@@ -214,6 +214,17 @@ let cleaned = clean_message("Hello \u{1F600} OTP: \u{0661}\u{0662}\u{0663}");
 
 Arabic letters and Arabic text are fully supported and never stripped.
 
+## User-Agent
+
+Every API request carries the User-Agent `kwtsms-rust/<version>`: the library name and version only, no
+personal or customer data. Call `with_app_name()` to put your own product token in front:
+
+```rust
+let sms = KwtSms::new("rust_username", "rust_password", Some("MY-SENDER"), false, None)?
+    .with_app_name("my-shop/2.1.0");
+// User-Agent: my-shop/2.1.0 kwtsms-rust/0.1.10
+```
+
 ## Error Handling
 
 All methods return `Result<T, KwtSmsError>`. The error enum:

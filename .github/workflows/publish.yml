@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       # 2026-11-04 21:25 +03: newer deps (idna_adapter 1.2.2 needs Rust 1.86) broke the MSRV job since March; resolve the
-      # lockfile with stable using the MSRV-aware resolver so 1.83 gets versions it can build (fix-rust-msrv, integration agent)
+      # lockfile with stable using the MSRV-aware resolver so 1.83 gets versions it can build (fix-rust-msrv)
       - uses: dtolnay/rust-toolchain@stable
       - run: CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS=fallback cargo +stable generate-lockfile
       - uses: dtolnay/rust-toolchain@master

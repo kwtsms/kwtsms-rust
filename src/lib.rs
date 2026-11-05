@@ -38,7 +38,8 @@ pub mod types;
 mod test_common;
 
 // Re-export public API
-pub use client::KwtSms;
+// 2026-11-05 14:13 +03: build_user_agent and VERSION exported for the User-Agent (#939).
+pub use client::{build_user_agent, KwtSms, VERSION};
 pub use errors::{enrich_error, KwtSmsError, API_ERRORS};
 pub use message::clean_message;
 pub use phone::{

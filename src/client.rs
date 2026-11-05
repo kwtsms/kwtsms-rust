@@ -16,6 +16,10 @@ const MAX_BATCH_SIZE: usize = 200;
 const BATCH_DELAY_MS: u64 = 500;
 const ERR013_BACKOFF_SECS: &[u64] = &[30, 60, 120];
 
+/// Library version, sent in the User-Agent. Read from Cargo.toml at build time.
+/// 2026-11-05 14:13 +03: added so kwtSMS can count accounts per integration (#939).
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 /// kwtSMS API client.
 ///
 /// Thread-safe: can be shared across threads via `Arc<KwtSms>`.
@@ -35,6 +39,8 @@ pub struct KwtSms {
     log_file: String,
     cached_balance: Arc<Mutex<Option<f64>>>,
     cached_purchased: Arc<Mutex<Option<f64>>>,
+    // 2026-11-05 14:13 +03: User-Agent sent on every API call, "[app token ]kwtsms-rust/<version>" (#939).
+    user_agent: String,
 }
 
 impl KwtSms {
@@ -76,6 +82,8 @@ impl KwtSms {
             log_file: log_file.unwrap_or("").to_string(),
             cached_balance: Arc::new(Mutex::new(None)),
             cached_purchased: Arc::new(Mutex::new(None)),
+            // 2026-11-05 14:13 +03: library token only until with_app_name() is called (#939).
+            user_agent: build_user_agent(""),
         })
     }
 
@@ -132,6 +140,20 @@ impl KwtSms {
         )
     }
 
+    /// Put the calling app's product token (e.g. "kwtsms-wordpress/3.5.2") in front of the
+    /// library token in the User-Agent. The token is sanitized (see [`build_user_agent`]).
+    /// 2026-11-05 14:13 +03: added for per-integration counts (#939).
+    pub fn with_app_name(mut self, app_name: &str) -> Self {
+        self.user_agent = build_user_agent(app_name);
+        self
+    }
+
+    /// The User-Agent this client sends: "[app token ]kwtsms-rust/<VERSION>".
+    /// 2026-11-05 14:13 +03: added for per-integration counts (#939).
+    pub fn user_agent(&self) -> &str {
+        &self.user_agent
+    }
+
     /// Get the cached balance from the last verify() or successful send().
     pub fn cached_balance(&self) -> Option<f64> {
         self.cached_balance.lock().ok().and_then(|g| *g)
@@ -152,7 +174,7 @@ impl KwtSms {
             "password": self.password,
         });
 
-        match api_request("balance", &payload, &self.log_file) {
+        match api_request("balance", &payload, &self.log_file, &self.user_agent) {
             Ok(data) => {
                 let result = data
                     .get("result")
@@ -295,7 +317,7 @@ impl KwtSms {
             "test": if self.test_mode { "1" } else { "0" },
         });
 
-        match api_request("send", &payload, &self.log_file) {
+        match api_request("send", &payload, &self.log_file, &self.user_agent) {
             Ok(mut data) => {
                 // Update cached balance from response
                 if let Some(bal) = data.get("balance-after").and_then(|v| v.as_f64()) {
@@ -469,7 +491,7 @@ impl KwtSms {
         payload: &Value,
         _batch_num: u32,
     ) -> Result<Value, KwtSmsError> {
-        let mut last_result = api_request("send", payload, &self.log_file);
+        let mut last_result = api_request("send", payload, &self.log_file, &self.user_agent);
 
         for backoff in ERR013_BACKOFF_SECS {
             match &last_result {
@@ -480,7 +502,7 @@ impl KwtSms {
                     }
                     // ERR013: queue full, retry with backoff
                     thread::sleep(Duration::from_secs(*backoff));
-                    last_result = api_request("send", payload, &self.log_file);
+                    last_result = api_request("send", payload, &self.log_file, &self.user_agent);
                 }
                 Err(_) => return last_result,
             }
@@ -591,7 +613,7 @@ impl KwtSms {
             "mobile": mobile_str,
         });
 
-        match api_request("validate", &payload, &self.log_file) {
+        match api_request("validate", &payload, &self.log_file, &self.user_agent) {
             Ok(data) => {
                 let result = data
                     .get("result")
@@ -676,7 +698,7 @@ impl KwtSms {
             "password": self.password,
         });
 
-        match api_request("senderid", &payload, &self.log_file) {
+        match api_request("senderid", &payload, &self.log_file, &self.user_agent) {
             Ok(mut data) => {
                 // Normalize response structure
                 let result = data
@@ -719,7 +741,7 @@ impl KwtSms {
             "password": self.password,
         });
 
-        match api_request("coverage", &payload, &self.log_file) {
+        match api_request("coverage", &payload, &self.log_file, &self.user_agent) {
             Ok(data) => Ok(data),
             Err(KwtSmsError::Api {
                 code,
@@ -754,7 +776,7 @@ impl KwtSms {
             "msgid": msg_id,
         });
 
-        match api_request("status", &payload, &self.log_file) {
+        match api_request("status", &payload, &self.log_file, &self.user_agent) {
             Ok(data) => Ok(data),
             Err(KwtSmsError::Api {
                 code,
@@ -789,7 +811,7 @@ impl KwtSms {
             "msgid": msg_id,
         });
 
-        match api_request("dlr", &payload, &self.log_file) {
+        match api_request("dlr", &payload, &self.log_file, &self.user_agent) {
             Ok(data) => Ok(data),
             Err(KwtSmsError::Api {
                 code,
@@ -806,6 +828,35 @@ impl KwtSms {
                 "description": e.to_string()
             })),
         }
+    }
+}
+
+/// Build the User-Agent from an optional app token. The token is caller input, so control
+/// characters (CR/LF would split the header) are removed, whitespace runs become '-', leading and
+/// trailing '-' are trimmed, and it is cut to 64 bytes on a character boundary. Empty gives the
+/// library token only. Non-ASCII characters are dropped as well: ureq rejects such a header
+/// (BadHeader), which would fail every request.
+/// 2026-11-05 14:13 +03: added for per-integration counts (#939).
+/// 2026-11-05 14:17 +03: drop non-ASCII, probe showed ureq returns BadHeader for it (#939).
+pub fn build_user_agent(app_name: &str) -> String {
+    let no_ctrl: String = app_name
+        .chars()
+        .filter(|c| !c.is_control() && (c.is_ascii() || c.is_whitespace()))
+        .collect();
+    let dashed = no_ctrl.split_whitespace().collect::<Vec<_>>().join("-");
+    let mut app = dashed.trim_matches('-');
+    if app.len() > 64 {
+        let mut end = 64;
+        while !app.is_char_boundary(end) {
+            end -= 1;
+        }
+        app = app[..end].trim_end_matches('-');
+    }
+    let lib = format!("kwtsms-rust/{}", VERSION);
+    if app.is_empty() {
+        lib
+    } else {
+        format!("{} {}", app, lib)
     }
 }
 

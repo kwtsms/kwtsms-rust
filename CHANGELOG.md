@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The client sends a User-Agent `kwtsms-rust/<version>` (name and version only, no personal data) so kwtSMS can see which integrations are in use. `KwtSms::with_app_name()` puts your app's token in front, e.g. `my-shop/2.1.0 kwtsms-rust/0.1.10`. New `kwtsms::VERSION` (from Cargo.toml), `user_agent()` and `build_user_agent()`.
+
 ### Changed
 - Package author and license holder are now kwtSMS.
 
