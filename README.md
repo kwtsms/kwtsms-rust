@@ -71,7 +71,7 @@ fn main() {
     println!("Balance: {:?}", result.balance);
 
     // Send SMS
-    let response = sms.send_one("96598765432", "Hello from Rust!", None).unwrap();
+    let response = sms.send_one("965XXXXXXXX", "Hello from Rust!", None).unwrap();
     println!("{}", response);
 }
 ```
@@ -122,16 +122,16 @@ if result.ok {
 
 ```rust
 // Single number
-let result = sms.send_one("96598765432", "Hello!", None).unwrap();
+let result = sms.send_one("965XXXXXXXX", "Hello!", None).unwrap();
 
 // Multiple numbers
-let result = sms.send(&["96598765432", "96512345678"], "Hello!", None).unwrap();
+let result = sms.send(&["965XXXXXXXX", "96512345678"], "Hello!", None).unwrap();
 
 // Custom sender ID
-let result = sms.send_one("96598765432", "Hello!", Some("MY-APP")).unwrap();
+let result = sms.send_one("965XXXXXXXX", "Hello!", Some("MY-APP")).unwrap();
 
 // Comma-separated
-let result = sms.send_one("96598765432,96512345678", "Hello!", None).unwrap();
+let result = sms.send_one("965XXXXXXXX,96512345678", "Hello!", None).unwrap();
 ```
 
 ### Check Balance
@@ -144,7 +144,7 @@ let cached = sms.cached_balance(); // Option<f64>, from last verify/send
 ### Validate Numbers
 
 ```rust
-let result = sms.validate(&["96598765432", "96512345678"]).unwrap();
+let result = sms.validate(&["965XXXXXXXX", "96512345678"]).unwrap();
 // Returns: ok[], er[], nr[], rejected[]
 ```
 
@@ -176,9 +176,9 @@ let result = sms.dlr("msg-id-from-send-response").unwrap();
 
 ```rust
 // Resends on ERR028 up to 3 times (0 = no retry), waiting 10s between attempts
-let result = sms.send_with_retry(&["96598765432"], "Hello!", None, 3).unwrap();
+let result = sms.send_with_retry(&["965XXXXXXXX"], "Hello!", None, 3).unwrap();
 // Or match your account's own window:
-let result = sms.send_with_retry_wait(&["96598765432"], "Hello!", None, 3, std::time::Duration::from_secs(30)).unwrap();
+let result = sms.send_with_retry_wait(&["965XXXXXXXX"], "Hello!", None, 3, std::time::Duration::from_secs(30)).unwrap();
 ```
 
 ERR028 only happens when Duplicate SMS protection is turned on in your account's API settings. When it is on and any number in the request was sent the same message within the account's window (10 seconds by default, configurable per account), the whole request is rejected and nothing is charged.
@@ -189,7 +189,7 @@ ERR028 only happens when Duplicate SMS protection is turned on in your account's
 use kwtsms::{normalize_phone, validate_phone_input, clean_message};
 
 // Normalize phone number
-let phone = normalize_phone("+965 9876-5432"); // "96598765432"
+let phone = normalize_phone("+965 XXXX-XXXX"); // "965XXXXXXXX"
 
 // Validate phone input
 let (valid, error, normalized) = validate_phone_input("user@gmail.com");
@@ -239,7 +239,7 @@ Raw API errors should never be shown to end users. Map them:
 
 | Situation | API error | Show to user |
 |-----------|----------|--------------|
-| Invalid phone number | ERR006, ERR025 | "Please enter a valid phone number in international format (e.g., +965 9876 5432)." |
+| Invalid phone number | ERR006, ERR025 | "Please enter a valid phone number in international format (e.g., +965 XXXX XXXX)." |
 | Wrong credentials | ERR003 | "SMS service is temporarily unavailable. Please try again later." (log + alert admin) |
 | No balance | ERR010, ERR011 | "SMS service is temporarily unavailable. Please try again later." (alert admin) |
 | Country not supported | ERR026 | "SMS delivery to this country is not available." |
@@ -253,13 +253,13 @@ All formats are accepted and normalized automatically:
 
 | Input | Normalized | Valid? |
 |-------|-----------|--------|
-| `96598765432` | `96598765432` | Yes |
-| `+96598765432` | `96598765432` | Yes |
-| `0096598765432` | `96598765432` | Yes |
-| `965 9876 5432` | `96598765432` | Yes |
-| `965-9876-5432` | `96598765432` | Yes |
-| `(965) 98765432` | `96598765432` | Yes |
-| `٩٦٥٩٨٧٦٥٤٣٢` | `96598765432` | Yes |
+| `965XXXXXXXX` | `965XXXXXXXX` | Yes |
+| `+965XXXXXXXX` | `965XXXXXXXX` | Yes |
+| `00965XXXXXXXX` | `965XXXXXXXX` | Yes |
+| `965 XXXX XXXX` | `965XXXXXXXX` | Yes |
+| `965-XXXX-XXXX` | `965XXXXXXXX` | Yes |
+| `(965) XXXXXXXX` | `965XXXXXXXX` | Yes |
+| `٩٦٥XXXXXXXX` (Arabic-Indic digits) | `965XXXXXXXX` | Yes |
 | `123456` (too short) | rejected | No |
 | `user@gmail.com` | rejected | No |
 
@@ -287,7 +287,7 @@ A **Sender ID** is the name that appears as the sender on the recipient's phone 
 ### Always save msg-id and balance-after
 
 ```rust
-let result = sms.send_one("96598765432", "Hello!", None).unwrap();
+let result = sms.send_one("965XXXXXXXX", "Hello!", None).unwrap();
 if result["result"] == "OK" {
     let msg_id = result["msg-id"].as_str().unwrap();     // save for status/DLR
     let balance = result["balance-after"].as_f64().unwrap(); // never call balance() after send()

@@ -47,7 +47,8 @@ pub static API_ERRORS: LazyLock<HashMap<&'static str, &'static str>> = LazyLock:
         "This account does not have API access. Contact kwtSMS support to enable it.",
     );
     m.insert("ERR005", "This account is blocked. Contact kwtSMS support.");
-    m.insert("ERR006", "No valid phone numbers. Make sure each number includes the country code (e.g., 96598765432 for Kuwait, not 98765432).");
+    // 2026-11-05 08:36 +03: placeholder instead of a real-looking number, int-testnumber
+    m.insert("ERR006", "No valid phone numbers. Make sure each number includes the country code (e.g., 965XXXXXXXX for Kuwait, not XXXXXXXX).");
     m.insert(
         "ERR007",
         "Too many numbers in a single request (maximum 200). Split into smaller batches.",
@@ -91,7 +92,8 @@ pub static API_ERRORS: LazyLock<HashMap<&'static str, &'static str>> = LazyLock:
         "Unknown delivery report error. Contact kwtSMS support.",
     );
     m.insert("ERR024", "Your IP address is not in the API whitelist. Add it at kwtsms.com \u{2192} Account \u{2192} API \u{2192} IP Lockdown, or disable IP lockdown.");
-    m.insert("ERR025", "Invalid phone number. Make sure the number includes the country code (e.g., 96598765432 for Kuwait, not 98765432).");
+    // 2026-11-05 08:36 +03: placeholder instead of a real-looking number, int-testnumber
+    m.insert("ERR025", "Invalid phone number. Make sure the number includes the country code (e.g., 965XXXXXXXX for Kuwait, not XXXXXXXX).");
     m.insert("ERR026", "This country is not activated on your account. Contact kwtSMS support to enable the destination country.");
     m.insert(
         "ERR027",

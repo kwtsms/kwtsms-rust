@@ -4,7 +4,7 @@ fn main() {
     let sms = KwtSms::from_env(None).expect("Failed to create client");
 
     // 1. Validate the phone number locally first
-    let phone = "+96598765432";
+    let phone = "+965XXXXXXXX";
     let (valid, error, normalized) = validate_phone_input(phone);
     if !valid {
         eprintln!("Invalid phone: {}", error.unwrap());

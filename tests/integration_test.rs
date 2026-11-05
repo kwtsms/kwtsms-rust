@@ -12,6 +12,10 @@
 
 #![cfg(feature = "integration")]
 
+// 2026-11-05 08:50 +03: live sends go only to KWTSMS_TEST_NUMBER (tests/common), each test
+// returns early when it is unset; no phone number in the repo. int-testnumber
+mod common;
+
 use kwtsms::KwtSms;
 
 fn get_client() -> Option<KwtSms> {
@@ -99,8 +103,11 @@ fn test_integration_send_valid_kuwait_number() {
     if !has_credentials() {
         return;
     }
+    let Some(n) = common::test_number() else {
+        return;
+    };
     let client = get_client_or_skip();
-    let result = client.send_one("96598765432", "Test from Rust client", None);
+    let result = client.send_one(&n, "Test from Rust client", None);
     assert!(result.is_ok());
     let data = result.unwrap();
     let status = data["result"].as_str().unwrap_or("MISSING");
@@ -154,8 +161,11 @@ fn test_integration_send_mixed_valid_invalid() {
     if !has_credentials() {
         return;
     }
+    let Some(n) = common::test_number() else {
+        return;
+    };
     let client = get_client_or_skip();
-    let result = client.send(&["96598765432", "abc", "123"], "Test mixed", None);
+    let result = client.send(&[n.as_str(), "abc", "123"], "Test mixed", None);
     assert!(result.is_ok());
     let data = result.unwrap();
     // Should have invalid entries
@@ -169,8 +179,11 @@ fn test_integration_send_with_normalization_plus() {
     if !has_credentials() {
         return;
     }
+    let Some(n) = common::test_number() else {
+        return;
+    };
     let client = get_client_or_skip();
-    let result = client.send_one("+96598765432", "Test plus prefix", None);
+    let result = client.send_one(&format!("+{}", n), "Test plus prefix", None);
     assert!(result.is_ok());
 }
 
@@ -179,8 +192,11 @@ fn test_integration_send_with_normalization_double_zero() {
     if !has_credentials() {
         return;
     }
+    let Some(n) = common::test_number() else {
+        return;
+    };
     let client = get_client_or_skip();
-    let result = client.send_one("0096598765432", "Test 00 prefix", None);
+    let result = client.send_one(&format!("00{}", n), "Test 00 prefix", None);
     assert!(result.is_ok());
 }
 
@@ -189,10 +205,15 @@ fn test_integration_send_duplicate_normalized() {
     if !has_credentials() {
         return;
     }
+    let Some(n) = common::test_number() else {
+        return;
+    };
     let client = get_client_or_skip();
     // These all normalize to the same number
+    let plus = format!("+{}", n);
+    let dz = format!("00{}", n);
     let result = client.send(
-        &["+96598765432", "0096598765432", "96598765432"],
+        &[plus.as_str(), dz.as_str(), n.as_str()],
         "Dedup test",
         None,
     );
@@ -205,8 +226,11 @@ fn test_integration_send_empty_message() {
     if !has_credentials() {
         return;
     }
+    let Some(n) = common::test_number() else {
+        return;
+    };
     let client = get_client_or_skip();
-    let result = client.send_one("96598765432", "", None);
+    let result = client.send_one(&n, "", None);
     assert!(result.is_ok());
     let data = result.unwrap();
     assert_eq!(data["result"].as_str().unwrap(), "ERROR");
@@ -217,8 +241,11 @@ fn test_integration_send_emoji_only_message() {
     if !has_credentials() {
         return;
     }
+    let Some(n) = common::test_number() else {
+        return;
+    };
     let client = get_client_or_skip();
-    let result = client.send_one("96598765432", "\u{1F600}\u{1F601}", None);
+    let result = client.send_one(&n, "\u{1F600}\u{1F601}", None);
     assert!(result.is_ok());
     let data = result.unwrap();
     // After cleaning, message is empty -> ERR009
@@ -267,8 +294,11 @@ fn test_integration_validate_valid_numbers() {
     if !has_credentials() {
         return;
     }
+    let Some(n) = common::test_number() else {
+        return;
+    };
     let client = get_client_or_skip();
-    let result = client.validate(&["96598765432"]);
+    let result = client.validate(&[n.as_str()]);
     assert!(result.is_ok());
 }
 
@@ -277,8 +307,11 @@ fn test_integration_validate_mixed() {
     if !has_credentials() {
         return;
     }
+    let Some(n) = common::test_number() else {
+        return;
+    };
     let client = get_client_or_skip();
-    let result = client.validate(&["96598765432", "abc", "123"]);
+    let result = client.validate(&[n.as_str(), "abc", "123"]);
     assert!(result.is_ok());
     let data = result.unwrap();
     // Should have rejected entries
@@ -346,12 +379,11 @@ fn test_integration_send_wrong_sender() {
     if !has_credentials() {
         return;
     }
+    let Some(n) = common::test_number() else {
+        return;
+    };
     let client = get_client_or_skip();
-    let result = client.send_one(
-        "96598765432",
-        "Wrong sender test",
-        Some("NONEXISTENT-SENDER-12345"),
-    );
+    let result = client.send_one(&n, "Wrong sender test", Some("NONEXISTENT-SENDER-12345"));
     assert!(result.is_ok());
     let data = result.unwrap();
     // May return ERR008 or OK depending on test mode behavior
@@ -366,7 +398,10 @@ fn test_integration_send_empty_sender() {
     if !has_credentials() {
         return;
     }
+    let Some(n) = common::test_number() else {
+        return;
+    };
     let client = get_client_or_skip();
-    let result = client.send_one("96598765432", "Empty sender test", Some(""));
+    let result = client.send_one(&n, "Empty sender test", Some(""));
     assert!(result.is_ok());
 }

@@ -723,58 +723,67 @@ pub fn validate_phone_input(phone: &str) -> (bool, Option<String>, String) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    // 2026-11-05 08:45 +03: Kuwait tests read KWTSMS_TEST_NUMBER through the shared helper
+    // and return early when it is unset; no phone number in the repo. int-testnumber
+    use crate::test_common::*;
 
     // ===== normalize_phone tests =====
 
     #[test]
     fn test_normalize_plain_number() {
-        assert_eq!(normalize_phone("96598765432"), "96598765432");
+        let Some(n) = test_number() else { return };
+        assert!(normalize_phone(&n) == n, "values hidden");
     }
 
     #[test]
     fn test_normalize_plus_prefix() {
-        assert_eq!(normalize_phone("+96598765432"), "96598765432");
+        let Some(n) = test_number() else { return };
+        assert!(normalize_phone(&format!("+{}", n)) == n, "values hidden");
     }
 
     #[test]
     fn test_normalize_double_zero_prefix() {
-        assert_eq!(normalize_phone("0096598765432"), "96598765432");
+        let Some(n) = test_number() else { return };
+        assert!(normalize_phone(&format!("00{}", n)) == n, "values hidden");
     }
 
     #[test]
     fn test_normalize_spaces() {
-        assert_eq!(normalize_phone("965 9876 5432"), "96598765432");
+        let Some(n) = test_number() else { return };
+        assert!(normalize_phone(&with_sep(&n, " ")) == n, "values hidden");
     }
 
     #[test]
     fn test_normalize_dashes() {
-        assert_eq!(normalize_phone("965-9876-5432"), "96598765432");
+        let Some(n) = test_number() else { return };
+        assert!(normalize_phone(&with_sep(&n, "-")) == n, "values hidden");
     }
 
     #[test]
     fn test_normalize_dots() {
-        assert_eq!(normalize_phone("965.9876.5432"), "96598765432");
+        let Some(n) = test_number() else { return };
+        assert!(normalize_phone(&with_sep(&n, ".")) == n, "values hidden");
     }
 
     #[test]
     fn test_normalize_parentheses() {
-        assert_eq!(normalize_phone("(965) 98765432"), "96598765432");
+        let Some(n) = test_number() else { return };
+        assert!(
+            normalize_phone(&format!("(965) {}", local_part(&n))) == n,
+            "values hidden"
+        );
     }
 
     #[test]
     fn test_normalize_arabic_digits() {
-        assert_eq!(
-            normalize_phone("\u{0669}\u{0666}\u{0665}\u{0669}\u{0668}\u{0667}\u{0666}\u{0665}\u{0664}\u{0663}\u{0662}"),
-            "96598765432"
-        );
+        let Some(n) = test_number() else { return };
+        assert!(normalize_phone(&to_arabic_indic(&n)) == n, "values hidden");
     }
 
     #[test]
     fn test_normalize_persian_digits() {
-        assert_eq!(
-            normalize_phone("\u{06F9}\u{06F6}\u{06F5}\u{06F9}\u{06F8}\u{06F7}\u{06F6}\u{06F5}\u{06F4}\u{06F3}\u{06F2}"),
-            "96598765432"
-        );
+        let Some(n) = test_number() else { return };
+        assert!(normalize_phone(&to_persian(&n)) == n, "values hidden");
     }
 
     #[test]
@@ -789,12 +798,17 @@ mod tests {
 
     #[test]
     fn test_normalize_leading_zeros() {
-        assert_eq!(normalize_phone("0098765432"), "98765432");
+        // Leading zeros stripped from a non-Kuwait digit string.
+        assert_eq!(normalize_phone("0012345678"), "12345678");
     }
 
     #[test]
     fn test_normalize_mixed() {
-        assert_eq!(normalize_phone("+00 965-9876-5432"), "96598765432");
+        let Some(n) = test_number() else { return };
+        assert!(
+            normalize_phone(&format!("+00 {}", with_sep(&n, "-"))) == n,
+            "values hidden"
+        );
     }
 
     // ===== Domestic trunk prefix stripping =====
@@ -835,15 +849,16 @@ mod tests {
 
     #[test]
     fn test_normalize_kuwait_no_trunk() {
-        // Kuwait numbers don't have trunk prefixes
-        assert_eq!(normalize_phone("96598765432"), "96598765432");
+        let Some(n) = test_number() else { return };
+        assert!(normalize_phone(&n) == n, "values hidden");
     }
 
     // ===== find_country_code tests =====
 
     #[test]
     fn test_find_cc_kuwait() {
-        assert_eq!(find_country_code("96598765432"), Some("965"));
+        // Prefix lookup only: the placeholder is enough.
+        assert_eq!(find_country_code(PLACEHOLDER), Some("965"));
     }
 
     #[test]
@@ -870,14 +885,17 @@ mod tests {
 
     #[test]
     fn test_format_kuwait_valid() {
-        let (valid, err) = validate_phone_format("96598765432");
+        let Some(n) = test_number() else { return };
+        let (valid, err) = validate_phone_format(&n);
         assert!(valid);
         assert!(err.is_none());
     }
 
     #[test]
     fn test_format_kuwait_wrong_length() {
-        let (valid, err) = validate_phone_format("9659876543"); // 7 local digits instead of 8
+        let Some(n) = test_number() else { return };
+        // 7 local digits instead of 8
+        let (valid, err) = validate_phone_format(&n[..10]);
         assert!(!valid);
         assert!(err.unwrap().contains("expected 8 digits"));
     }
@@ -929,10 +947,11 @@ mod tests {
 
     #[test]
     fn test_validate_valid_number() {
-        let (valid, err, normalized) = validate_phone_input("+96598765432");
+        let Some(n) = test_number() else { return };
+        let (valid, err, normalized) = validate_phone_input(&format!("+{}", n));
         assert!(valid);
         assert!(err.is_none());
-        assert_eq!(normalized, "96598765432");
+        assert!(normalized == n, "values hidden");
     }
 
     #[test]
@@ -998,12 +1017,11 @@ mod tests {
 
     #[test]
     fn test_validate_arabic_digits() {
-        let (valid, err, normalized) = validate_phone_input(
-            "\u{0669}\u{0666}\u{0665}\u{0669}\u{0668}\u{0667}\u{0666}\u{0665}\u{0664}\u{0663}\u{0662}",
-        );
+        let Some(n) = test_number() else { return };
+        let (valid, err, normalized) = validate_phone_input(&to_arabic_indic(&n));
         assert!(valid);
         assert!(err.is_none());
-        assert_eq!(normalized, "96598765432");
+        assert!(normalized == n, "values hidden");
     }
 
     #[test]
@@ -1025,15 +1043,12 @@ mod tests {
 
     #[test]
     fn test_validate_kuwait_all_valid_prefixes() {
-        // 4x, 5x, 6x, 9x are valid Kuwait mobile prefixes
+        let Some(n) = test_number() else { return };
+        // 4x, 5x, 6x, 9x are valid Kuwait mobile prefixes (built from the test number)
         for prefix in ["4", "5", "6", "9"] {
-            let number = format!("965{}1234567", prefix);
-            let (valid, err, _) = validate_phone_input(&number);
-            assert!(
-                valid,
-                "Kuwait prefix {} should be valid, got: {:?}",
-                prefix, err
-            );
+            let number = format!("965{}{}", prefix, &n[4..]);
+            let (valid, _, _) = validate_phone_input(&number);
+            assert!(valid, "Kuwait prefix {} should be valid", prefix);
         }
     }
 

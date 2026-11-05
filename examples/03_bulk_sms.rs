@@ -6,7 +6,7 @@ fn main() {
     // Bulk send: auto-batches when >200 numbers
     // Each batch is 200 numbers max, with 0.5s delay between batches
     let numbers: Vec<&str> = vec![
-        "96598765432",
+        "965XXXXXXXX",
         "96512345678",
         "96587654321",
         // ... add more numbers

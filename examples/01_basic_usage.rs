@@ -17,7 +17,7 @@ fn main() {
 
     // Send a single SMS
     let result = sms
-        .send_one("96598765432", "Hello from the kwtsms Rust client!", None)
+        .send_one("965XXXXXXXX", "Hello from the kwtsms Rust client!", None)
         .expect("Send failed");
 
     println!(

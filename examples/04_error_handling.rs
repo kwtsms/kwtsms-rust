@@ -4,12 +4,12 @@ fn main() {
     let sms = KwtSms::from_env(None).expect("Failed to create client");
 
     // 1. Always validate phone numbers before sending
-    let user_input = "+965 9876-5432";
+    let user_input = "+965 XXXX-XXXX";
     let (valid, error, normalized) = validate_phone_input(user_input);
     if !valid {
         // Show user-friendly message, not the raw error
         eprintln!(
-            "Please enter a valid phone number in international format (e.g., +965 9876 5432)."
+            "Please enter a valid phone number in international format (e.g., +965 XXXX XXXX)."
         );
         eprintln!("Debug: {}", error.unwrap());
         return;

@@ -49,7 +49,7 @@ const SENDER_ID: &str = "MyApp"; // YOUR registered Transactional Sender ID
 // -- DELETE FROM otp_codes WHERE expires_at < NOW();
 //
 // CREATE TABLE sms_rate_limits (
-//     key         VARCHAR(64) PRIMARY KEY,  -- "phone:96598765432" or "ip:1.2.3.4"
+//     key         VARCHAR(64) PRIMARY KEY,  -- "phone:965XXXXXXXX" or "ip:1.2.3.4"
 //     count       INT DEFAULT 1,
 //     window_start TIMESTAMPTZ DEFAULT NOW()
 // );
@@ -88,11 +88,11 @@ const SENDER_ID: &str = "MyApp"; // YOUR registered Transactional Sender ID
 // ---- Option 4: Redis (fastest, auto-expiry built in) ----
 // Crate: redis = "0.27"
 //
-// SET   otp:96598765432  "123456"  EX 300        -- auto-expires in 5 min
-// INCR  otp_attempts:96598765432                  -- brute-force counter
-// EXPIRE otp_attempts:96598765432 300
-// INCR  rate:phone:96598765432                    -- rate limit counter
-// EXPIRE rate:phone:96598765432 3600              -- 1-hour window
+// SET   otp:965XXXXXXXX  "123456"  EX 300        -- auto-expires in 5 min
+// INCR  otp_attempts:965XXXXXXXX                  -- brute-force counter
+// EXPIRE otp_attempts:965XXXXXXXX 300
+// INCR  rate:phone:965XXXXXXXX                    -- rate limit counter
+// EXPIRE rate:phone:965XXXXXXXX 3600              -- 1-hour window
 // INCR  rate:ip:192.168.1.100
 // EXPIRE rate:ip:192.168.1.100 3600
 //
@@ -198,7 +198,7 @@ fn send_otp(
     let (valid, error, normalized) = validate_phone_input(phone);
     if !valid {
         return Err(format!(
-            "Please enter a valid phone number (e.g., +965 9876 5432). {}",
+            "Please enter a valid phone number (e.g., +965 XXXX XXXX). {}",
             error.unwrap_or_default()
         ));
     }
@@ -284,7 +284,7 @@ fn send_otp(
             //    NEVER show raw API errors to end users
             let code = result["code"].as_str().unwrap_or("");
             let user_msg = match code {
-                "ERR006" | "ERR025" => "Please enter a valid phone number (e.g., +965 9876 5432).",
+                "ERR006" | "ERR025" => "Please enter a valid phone number (e.g., +965 XXXX XXXX).",
                 "ERR010" | "ERR011" => {
                     println!("[ALERT] SMS balance depleted! Code: {}", code);
                     "SMS service is temporarily unavailable. Please try again later."
@@ -371,14 +371,14 @@ fn main() {
 
     // Step 1: User requests OTP
     println!("=== Step 1: Request OTP ===");
-    match send_otp(&sms, &store, "+965 9876 5432", client_ip) {
+    match send_otp(&sms, &store, "+965 XXXX XXXX", client_ip) {
         Ok(msg) => println!("  {}", msg),
         Err(msg) => println!("  Error: {}", msg),
     }
 
     // Step 2: User enters wrong code
     println!("\n=== Step 2: Wrong code ===");
-    match verify_otp(&store, "+965 9876 5432", "999999") {
+    match verify_otp(&store, "+965 XXXX XXXX", "999999") {
         Ok(msg) => println!("  {}", msg),
         Err(msg) => println!("  Error: {}", msg),
     }
@@ -388,18 +388,18 @@ fn main() {
     let correct_code = {
         let s = store.lock().unwrap();
         s.codes
-            .get("96598765432")
+            .get("965XXXXXXXX")
             .map(|r| r.code.clone())
             .unwrap_or_else(|| "000000".to_string())
     };
-    match verify_otp(&store, "+965 9876 5432", &correct_code) {
+    match verify_otp(&store, "+965 XXXX XXXX", &correct_code) {
         Ok(msg) => println!("  {}", msg),
         Err(msg) => println!("  Error: {}", msg),
     }
 
     // Step 4: Rapid resend — blocked by cooldown
     println!("\n=== Step 4: Resend too soon ===");
-    match send_otp(&sms, &store, "+965 9876 5432", client_ip) {
+    match send_otp(&sms, &store, "+965 XXXX XXXX", client_ip) {
         Ok(msg) => println!("  {}", msg),
         Err(msg) => println!("  Error: {}", msg),
     }
