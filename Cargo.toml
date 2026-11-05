@@ -11,6 +11,8 @@ documentation = "https://docs.rs/kwtsms"
 readme = "README.md"
 keywords = ["sms", "kwtsms", "kuwait", "messaging", "api"]
 categories = ["api-bindings", "web-programming::http-client"]
+# 2026-11-06 01:05 +03: keep the maintainer release script out of the published crate, ci-dryrun-all
+exclude = ["scripts/"]
 
 [dependencies]
 ureq = "2"
