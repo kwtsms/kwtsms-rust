@@ -52,7 +52,7 @@ Or add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-kwtsms = "0.1"
+kwtsms = "0.2"
 ```
 
 **Minimum supported Rust version: 1.83**

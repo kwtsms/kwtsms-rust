@@ -99,7 +99,7 @@ const SENDER_ID: &str = "MyApp"; // YOUR registered Transactional Sender ID
 // ============================================================================
 
 // ============================================================================
-// OTP Store (in-memory — replace with DB above in production)
+// OTP Store (in-memory: replace with DB above in production)
 // ============================================================================
 
 struct OtpRecord {
@@ -223,7 +223,7 @@ fn send_otp(
         }
     }
 
-    // 5. Generate new OTP (always fresh — invalidate previous)
+    // 5. Generate new OTP (always fresh: invalidate previous)
     let otp = generate_otp();
 
     // 6. Send via kwtSMS with Transactional Sender ID
@@ -344,7 +344,7 @@ fn verify_otp(store: &Mutex<OtpStore>, phone: &str, code: &str) -> Result<String
         ));
     }
 
-    // Success — delete used OTP immediately (one-time use)
+    // Success: delete used OTP immediately (one-time use)
     // DB: DELETE FROM otp_codes WHERE phone = $1;
     // Redis: DEL otp:$phone otp_attempts:$phone
     store.codes.remove(&normalized);
@@ -352,7 +352,7 @@ fn verify_otp(store: &Mutex<OtpStore>, phone: &str, code: &str) -> Result<String
 }
 
 // ============================================================================
-// Main — Simulates the full OTP lifecycle
+// Main: Simulates the full OTP lifecycle
 // ============================================================================
 
 fn main() {
@@ -397,7 +397,7 @@ fn main() {
         Err(msg) => println!("  Error: {}", msg),
     }
 
-    // Step 4: Rapid resend — blocked by cooldown
+    // Step 4: Rapid resend: blocked by cooldown
     println!("\n=== Step 4: Resend too soon ===");
     match send_otp(&sms, &store, "+965 XXXX XXXX", client_ip) {
         Ok(msg) => println!("  {}", msg),
