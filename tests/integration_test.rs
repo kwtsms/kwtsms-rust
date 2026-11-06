@@ -59,20 +59,9 @@ fn test_integration_verify_valid_credentials() {
     assert!(result.balance.unwrap() >= 0.0);
 }
 
-#[test]
-fn test_integration_verify_wrong_credentials() {
-    let client = KwtSms::new(
-        "rust_invalid_user",
-        "rust_invalid_pass",
-        None,
-        true,
-        Some(""),
-    )
-    .unwrap();
-    let result = client.verify();
-    assert!(!result.ok);
-    assert!(result.error.is_some());
-}
+// 2026-11-07 00:03 +03: wrong-credential test mocked; live failed logins trip the security log (task neg-auth-tests).
+// test_integration_verify_wrong_credentials removed (it ran even without credentials): ERR003 handling
+// is covered offline by test_enrich_err003 in tests/errors_test.rs.
 
 #[test]
 fn test_integration_balance() {
