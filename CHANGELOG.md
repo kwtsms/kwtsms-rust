@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- HTTP client updated from ureq 2 to ureq 3. No change to the public API or behaviour: kwtSMS error bodies on 4xx responses are still read and returned as API errors.
+
 ## [0.2.0] - 2026-11-06
 
 ### Added

@@ -35,18 +35,42 @@ pub fn api_request(
         Err(e) => return Err(KwtSmsError::Network(format!("JSON serialize error: {}", e))),
     };
 
+    // 2026-11-07 03:04 +03: ureq 3 API (headers via .header(), timeout in the request config). 4xx/5xx come back
+    // as Ok with their status (http_status_as_error(false)) so the kwtSMS JSON error body can still be read,
+    // as with ureq 2's Error::Status. Task dep-rust-ureq3.
     let result = ureq::post(&url)
-        .set("Content-Type", "application/json")
-        .set("Accept", "application/json")
+        .header("Content-Type", "application/json")
+        .header("Accept", "application/json")
         // 2026-11-05 14:13 +03: "kwtsms-rust/<version>", prefixed by the app token when given (#939).
-        .set("User-Agent", user_agent)
-        .timeout(std::time::Duration::from_secs(TIMEOUT_SECS))
-        .send_string(&body);
+        .header("User-Agent", user_agent)
+        .config()
+        .timeout_global(Some(std::time::Duration::from_secs(TIMEOUT_SECS)))
+        .http_status_as_error(false)
+        .build()
+        .send(body.as_str());
 
-    match result {
-        Ok(response) => {
+    let mut response = match result {
+        Ok(r) => r,
+        Err(e) => {
+            let err_msg = format!("Network error: {}", e);
+            write_log(
+                log_file,
+                endpoint,
+                payload,
+                &Value::Null,
+                false,
+                Some(&err_msg),
+            );
+            return Err(KwtSmsError::Network(err_msg));
+        }
+    };
+    let status = response.status().as_u16();
+
+    match status {
+        200..=399 => {
             let response_body = response
-                .into_string()
+                .body_mut()
+                .read_to_string()
                 .map_err(|e| KwtSmsError::Network(format!("Failed to read response: {}", e)))?;
 
             let mut data: Value = serde_json::from_str(&response_body)
@@ -64,10 +88,11 @@ pub fn api_request(
 
             Ok(data)
         }
-        Err(ureq::Error::Status(status, response)) => {
+        _ => {
             // Read 4xx/5xx response body: kwtSMS returns JSON error details
             let response_body = response
-                .into_string()
+                .body_mut()
+                .read_to_string()
                 .unwrap_or_else(|_| format!("HTTP {} error", status));
 
             if let Ok(mut data) = serde_json::from_str::<Value>(&response_body) {
@@ -105,18 +130,6 @@ pub fn api_request(
                 );
                 Err(KwtSmsError::Network(err_msg))
             }
-        }
-        Err(ureq::Error::Transport(e)) => {
-            let err_msg = format!("Network error: {}", e);
-            write_log(
-                log_file,
-                endpoint,
-                payload,
-                &Value::Null,
-                false,
-                Some(&err_msg),
-            );
-            Err(KwtSmsError::Network(err_msg))
         }
     }
 }
