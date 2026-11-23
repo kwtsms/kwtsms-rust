@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme-header-dark.png">
+  <img alt="kwtSMS for Rust: SMS and OTP through kwtSMS" src=".github/assets/readme-header-light.png">
+</picture>
+
 # kwtSMS Rust Client
 
 [![Crates.io](https://img.shields.io/crates/v/kwtsms.svg)](https://crates.io/crates/kwtsms)
